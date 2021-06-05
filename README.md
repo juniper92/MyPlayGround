@@ -1,2 +1,2 @@
 # PeanutButter
-미니미친구들
+공부 연습장
