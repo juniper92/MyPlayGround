@@ -1,3 +1,3 @@
 # PeanutButter
 
-공부방
+공부 저장소 
