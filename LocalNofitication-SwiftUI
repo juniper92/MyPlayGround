@@ -1,0 +1,93 @@
+//
+//  ContentViewModel.swift
+//  LocalNotification SwiftUI
+//
+//  Created by Mila on 2022/05/10.
+//
+
+import Foundation
+import SwiftUI
+
+class LocalNotificationManager: ObservableObject {
+    
+    // 클래스 내에서 생성되는 알림 객체를 포함하는 배열 선언
+    var notifications = [Notification]()
+    
+    // 알림 전송 전, 유저에게 승인 요청. LocalNotificationManager인스턴스 초기화시 해당 작업 수행
+    init() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted == true && error == nil {
+                print("알림 권한 승인")
+            } else {
+                print("알림 권한 미승인")
+            }
+        }
+    }
+    
+    // 클래스 내부에, 특정 매개변수를 사용해 알림 인스턴스를 만드는 함수 만들기
+    func sendNotification(title: String, subtitle: String?, body: String, launchIn: Double) {
+        
+        // 함수 내부에는 알림으로 사용할 컨텐츠를 정의한다. 미디어나 이미지를 붙일 수 있다.
+        let content = UNMutableNotificationContent()
+        content.title = title
+        
+        if let subtitle = subtitle {
+            content.subtitle = subtitle
+        }
+        
+        content.body = body
+        
+//        let imageName = "cat"
+//        guard let imageURL = Bundle.main.url(forResource: imageName, withExtension: "jpeg") else { return }
+//        let attachment = try! UNNotificationAttachment(identifier: imageName, url: imageURL, options: .none)
+//        content.attachments = [attachment]
+        
+        
+        // 다음으로, 알림이 실행되도록 트리거를 설정한다. 이 예제에서는 특정 시간간격을 정의한다.
+        // (UNCalendarNotification Trigger 또는 UNLocationNotificationTrigger를 사용할 수도 있다.)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: launchIn, repeats: false)
+        let request = UNNotificationRequest(identifier: "demoNotification", content: content, trigger: trigger)
+        
+        // 그 후 결과요청을 UNNotificationCenter에 추가한다. 정의된 시간 간격이 경과하면 알림이 실행된다.
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+}
+
+
+struct ContentView: View {
+    
+    @ObservedObject var notificationManager = LocalNotificationManager()
+    
+    @State var showFootnote = false
+    
+    var body: some View {
+        
+        NavigationView {
+            
+            VStack {
+                Button {
+                    withAnimation {
+                        self.showFootnote.toggle()
+                        
+                        // send notification 함수 사용
+                        self.notificationManager.sendNotification(title: "안녕하세요", subtitle: "로컬 푸시알림입니다.", body: "로컬 푸시알림이 정상적으로 동작하고 있어요!", launchIn: 5)
+                    }
+                } label: {
+                    Text("로컬푸시 동작")
+                        .font(.title)
+                }
+                if showFootnote {
+                    Text("5초 후 알림도착")
+                        .font(.footnote)
+                }
+            }
+            .navigationTitle("로컬 알림")
+        }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
